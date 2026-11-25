@@ -68,6 +68,30 @@ _Filled in after each run, as dated entries. Each entry covers what happened, ev
 - **Share the parsing code.** When several steps parse the same format, require them to reuse one helper (here `STEP_RE` in `src/parse.mjs`), and test the shared format in every step that parses it.
 - **Merging is a human's decision.** Before merging, a human must look at every row whose reviewer is not `approve`.
 
+### 2026-11-25: runs 4 and 5 (feedback carried over; all 6 steps approved by the reviewer)
+
+**Run 4 ([45647298363](https://github.com/segalz/cloud-agents-lab/actions/runs/45647298363))**
+- **The owner's note reached the writer.** It arrived through `planning/notes/S2.1.md` (555 chars carried). The writer exported a shared `stepLine` regex from `src/parse.mjs` and reused it in `markDone`, and the reviewer approved.
+- **The fix is partial, and the reviewer missed it.** It allows several spaces after the id, but still only one before it.
+  - Rule: an owner note is a wish, not a check. Every behaviour that matters needs a locked test. Here the missing test is "extra spaces before the id".
+- **New supervisor bug:**
+  - **What happened:** S2.2 already had correct code, so the writer changed nothing. The supervisor counted "no changes" as a failure, and the step was marked `failed` after 2 attempts.
+  - **Fix:** "no changes and the tests pass" now sends the existing files to review instead.
+
+**Run 5 ([45648802232](https://github.com/segalz/cloud-agents-lab/actions/runs/45648802232))**
+- **S2.2 rewritten and approved.** S2.2 got history feedback (230 chars), was rewritten (28 s), and Cline approved it.
+- **S3.1 approved without changes.** The writer kept S3.1 as it was (the new path), and Cline approved the existing code.
+- **Final state: 6/6 steps `approve`.**
+
+**Problems on GitHub's side**
+- GitHub itself had transient errors:
+  - one `500` on a push;
+  - one GraphQL error when updating the PR. That turned run 5 red even though the supervisor succeeded.
+- Fix: the push already retries 3 times. The PR step now retries, and only warns.
+
+**Rules to add**
+- **Read the supervisor's exit code.** Hermes should read the result of the supervisor step itself (`run_end` in `log.md`), not only the colour of the Actions run.
+
 ## C. Draft rules for the future Hermes / Dots skill
 
 Status: draft until part B confirms them.

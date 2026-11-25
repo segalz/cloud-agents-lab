@@ -105,11 +105,17 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+        # GitHub's API has transient errors (seen in runs 4-5): retry, and never fail the job over the PR note.
         run: |
           if ! git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "$WORK_BRANCH" >/dev/null; then echo "no work branch yet"; exit 0; fi
-          url=$(gh pr list -R "$GITHUB_REPOSITORY" --head "$WORK_BRANCH" --state open --json url -q '.[0].url')
-          if [ -z "$url" ]; then
-            gh pr create -R "$GITHUB_REPOSITORY" --base main --head "$WORK_BRANCH" --title "Agent work: plan-tracker" --body-file planning/PR_BODY.md
-          else
-            gh pr comment "$url" -R "$GITHUB_REPOSITORY" --body "Run ${GITHUB_RUN_ID} finished: $(grep '^Last run:' planning/progress.md | sed 's/^Last run: //')"
-          fi
+          note="Run ${GITHUB_RUN_ID} finished: $(git fetch -q origin "$WORK_BRANCH" && git show FETCH_HEAD:planning/progress.md | grep '^Last run:' | sed 's/^Last run: //')"
+          for i in 1 2 3; do
+            url=$(gh pr list -R "$GITHUB_REPOSITORY" --head "$WORK_BRANCH" --state open --json url -q '.[0].url') || { sleep 20; continue; }
+            if [ -z "$url" ]; then
+              gh pr create -R "$GITHUB_REPOSITORY" --base main --head "$WORK_BRANCH" --title "Agent work: plan-tracker" --body-file planning/PR_BODY.md && exit 0
+            else
+              gh pr comment "$url" -R "$GITHUB_REPOSITORY" --body "$note" && exit 0
+            fi
+            sleep 20
+          done
+          echo "::warning::could not update the pull request (GitHub API errors); the work is on $WORK_BRANCH"
