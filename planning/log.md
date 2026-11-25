@@ -67,3 +67,12 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 54s · no verdict — Submission recorded (verified): Reviewed step S3.1 (`next` command), HEAD commit 595bb70. Findings: only `bin/plan-tracker.mjs` was added (34 lines); `src/parse.mjs` is pre-existing and untouched, within the allowed files. The CLI implements all four acceptance cases: prints `<id> <title>\n` and exits 0 for the next step; prints `all steps done\n` and exits 3 when all steps are done; writes `canno…
 - commit: `595bb70`
 - note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
+
+### 2026-11-25T15:14:05Z · S3.2 · attempt 1 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 14s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 57242/972
+- writer said: ## Result Added `status` and `done` commands to `bin/plan-tracker.mjs` using the existing `summary`, `parsePlan`, and `markDone` functions. The `done` command catches the error from `markDone` when an unknown step ID is provided and exits with code 1 while leaving the file unchanged. ## Changes - `b…
+- locked tests: ok
+- scope: ok (bin/plan-tracker.mjs)
+- independent check: 25/25 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 61s · APPROVE — Submission recorded (verified): Reviewed HEAD commit 54895c6 (S3.2 `status` and `done` commands). Only `bin/plan-tracker.mjs` changed (within allowed files). Verified against plan.md goal/acceptance: `status` prints `done/total done (percent%)` exit 0; `done` marks in-file, prints `marked <id> done` exit 0; unknown id leaves file unchanged, writes `unknown step` to stderr, exits 1; `next` unchange…
+- commit: `54895c6`
