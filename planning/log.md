@@ -136,3 +136,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (3s)
 - setup to first step: 5s inside the supervisor (job setup time is in the Actions log)
+
+### 2026-11-25T15:48:57Z · S2.2 · attempt 4 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 28s · bridge status done · bridge check true · fix runs 1 · restored false · tokens 50370/644
+- carried feedback into this attempt: 230 chars (owner note none, history)
+- writer said: ## Result Added explicit check for `total === 0` to return `0` instead of `NaN`. ## Changes `src/summary.mjs` - fixed percent calculation to return 0 when total is 0. ## Limitations none
+- locked tests: ok
+- scope: ok (src/summary.mjs)
+- independent check: 21/21 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 17s · APPROVE — Submission recorded (verified): Reviewed HEAD commit d571598 (S2.2 Summary numbers). Verified: only `src/summary.mjs` changed (allowed file); `percent` is `Math.floor(done * 100 / total)` and `0` when `total === 0` per spec; `node --test tests/locked/s2_2.test.mjs` passes 3/3; no network, no new dependencies, no env/home reads, no secrets; earlier export behaviour unchanged. Verdict: APPROVE.
+- commit: `d571598`
