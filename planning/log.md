@@ -191,3 +191,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (9s)
 - setup to first step: 11s inside the supervisor (job setup time is in the Actions log)
+
+### 2026-11-25T16:32:11Z · S2.1 · attempt 6 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 75s · bridge status done · bridge check true · fix runs 1 · restored false · tokens 159465/4204
+- carried feedback into this attempt: 780 chars (owner note, history)
+- writer said: ## Result Fixed the `markDone` function to include the `S` prefix when reconstructing the line. ## Changes - `src/update.mjs`: Added `S` literal in the template string to preserve the step prefix ## Limitations None
+- locked tests: ok
+- scope: ok (src/parse.mjs, src/update.mjs)
+- independent check: 27/27 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 266s · APPROVE — Submission recorded (verified): Reviewed step S2.1 (HEAD commit b791882) changing src/update.mjs and src/parse.mjs. Verification performed: - Ran `node --test tests/locked/s2_1.test.mjs`: all 7 tests pass. - Ran `node --test tests/locked/s1_1.test.mjs tests/locked/s1_2.test.mjs`: all 9 pass, confirming no regression in the shared src/parse.mjs exports (stepLine, parsePlan, nextStep). - Empirically…
+- commit: `b791882`
