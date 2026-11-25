@@ -185,3 +185,9 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 
 ### 2026-11-25T16:30:08Z · run 45652760008 ended · step_failed S2.1
 - steps done this run: 0 · elapsed 527s
+
+## 2026-11-25T16:32:09Z · run [45654747092](https://github.com/segalz/cloud-agents-lab/actions/runs/45654747092) started
+- max steps 1, max attempts 2, budget 60 min
+- writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (9s)
+- setup to first step: 11s inside the supervisor (job setup time is in the Actions log)
