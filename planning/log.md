@@ -85,3 +85,12 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (3s)
 - setup to first step: 4s inside the supervisor (job setup time is in the Actions log)
+
+### 2026-11-25T15:18:07Z · S2.1 · attempt 2 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 17s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 36825/547
+- writer said: ## Result Created `src/update.mjs` with `markDone(text, id)` function that finds a pending step line, changes its checkbox to `[x]`, handles CRLF preservation, skips already-done steps, ignores indented lines, and throws for unknown ids. ## Changes - `src/update.mjs` (created) ## Limitations none
+- locked tests: ok
+- scope: ok (src/update.mjs)
+- independent check: 25/25 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 94s · APPROVE — Submission recorded (verified): Reviewed step S2.1 (markDone in src/update.mjs) against its Goal/Acceptance and the shared step-line format. All 5 locked tests pass (`node --test tests/locked/s2_1.test.mjs`: 5/5). Additional edge-case probes confirmed correct behavior: CRLF and every other byte preserved; `[x]`/`[X]` already-done steps return text unchanged; unknown id throws `unknown step` (inclu…
+- commit: `0eef358`
