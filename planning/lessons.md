@@ -51,6 +51,23 @@ _Filled in after each run, as dated entries. Each entry covers what happened, ev
 - **Verdicts:** never rely on an exact output line from a bridged agent. Parse leniently, and treat "unknown" as "stop", never as "pass".
 - **Tests:** locked tests prove the minimum only. Keep a reviewer from a different model on every step, and add a regression test for every bug the reviewer finds.
 
+### 2026-11-25: run 3 (S2.1 re-opened by a human)
+
+**What happened**
+- **The resume worked.** A human set S2.1 back to `pending` on `agent/work`. Run [45643456596](https://github.com/segalz/cloud-agents-lab/actions/runs/45643456596) picked up S2.1 only, rewrote `src/update.mjs` (17 s), and got `APPROVE`.
+- **All tests passed again.** The independent check re-ran all 25 tests, including the S2.2 to S3.2 tests that use `markDone`.
+- **The title bug is gone:** now only the checkbox is checked.
+- **But one gap remains, missed by both the tests and the reviewer.** `markDone` matches exactly one space around the id, while `parsePlan` accepts any whitespace. So a line like `- [ ]  S1.1  Title` is listed by `parsePlan` but reported as `unknown step` by `markDone`.
+- **The bug was fixed by luck.** The writer never saw the reviewer's run-2 finding: feedback does not carry over between runs.
+- **S2.2 and S3.1 are still unreviewed.** They show `n/a (no verdict)` from run 2, before the fix. Their reviewer notes read as approvals, but no verdict was parsed.
+
+**Rules to add**
+- **Carry feedback when re-opening a step.** When a step is re-opened, the supervisor must pass the last review findings, or the human's note, to the writer.
+  - Next change: read the last `runs.jsonl` entry for that step and include it as feedback.
+  - Also allow a `Note:` column in `progress.md`.
+- **Share the parsing code.** When several steps parse the same format, require them to reuse one helper (here `STEP_RE` in `src/parse.mjs`), and test the shared format in every step that parses it.
+- **Merging is a human's decision.** Before merging, a human must look at every row whose reviewer is not `approve`.
+
 ## C. Draft rules for the future Hermes / Dots skill
 
 Status: draft until part B confirms them.
