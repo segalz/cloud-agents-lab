@@ -47,3 +47,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 69s · no verdict — Submission recorded (verified): REJECT. Reviewed S2.1 `src/update.mjs` against plan.md acceptance. Locked tests pass 5/5, scope is clean (only src/update.mjs added; no network/deps/env/secrets), but a concrete acceptance defect exists: `src/update.mjs:17` uses `line.includes("[ ]")` anywhere in the line to detect a pending step instead of checking the checkbox. An already-done step whose title con…
 - commit: `f5d498e`
 - note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
+
+### 2026-11-25T15:12:20Z · S2.2 · attempt 1 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 5s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 16787/200
+- writer said: ## Result Created `src/summary.mjs` with `summary(steps)` function that counts total, done, pending steps and calculates floored percentage. ## Changes - `src/summary.mjs` (created) ## Limitations none
+- locked tests: ok
+- scope: ok (src/summary.mjs)
+- independent check: 17/17 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 17s · no verdict — Submission recorded (verified): Reviewed HEAD commit 0c4c03e for step S2.2 (Summary numbers). Verified: only src/summary.mjs changed (Files allowed met); exports summary(steps) returning {total, done, pending, percent} per Goal/Acceptance; percent = Math.floor(done*100/total) with 0 when total===0. Locked tests node --test tests/locked/s2_2.test.mjs pass 3/3. No network, dependencies, env/home rea…
+- commit: `0c4c03e`
+- note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
