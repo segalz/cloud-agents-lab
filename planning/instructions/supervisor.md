@@ -6,7 +6,10 @@ These rules are what `runner/supervisor.mjs` does today. They are also the draft
 1. **Start from the branch.** Work on the `agent/work` branch, never on `main`. Merge `main` into it first, so plan and runner updates arrive.
 2. **Find the step.** Read `planning/progress.md` and take the first row whose status is `pending` or `in_progress`. If there is none, stop: the work is done.
 3. **Load the step.** Take the step's section from `planning/plan.md`, including its "Files allowed" and "Verify" lines.
-4. **Mark it started.** Set the row to `in_progress`, then commit and push. A crash after this point resumes from this row.
+4. **Carry feedback over.** When a step is re-opened, start the writer with feedback from two places:
+   - the owner's note in `planning/notes/<id>.md`, if it exists;
+   - the last attempt for that step in `planning/runs.jsonl`: either its feedback, or a reviewer `REJECT`.
+5. **Mark it started.** Set the row to `in_progress`, then commit and push. A crash after this point resumes from this row.
 5. **Writer:** call `apply_opencode_edits` with these arguments:
    - `prompt`: `instructions/writer.md`, the step spec, and the feedback from the previous attempt;
    - `verify`: the step's test;
