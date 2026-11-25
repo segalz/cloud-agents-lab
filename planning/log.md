@@ -57,3 +57,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 17s · no verdict — Submission recorded (verified): Reviewed HEAD commit 0c4c03e for step S2.2 (Summary numbers). Verified: only src/summary.mjs changed (Files allowed met); exports summary(steps) returning {total, done, pending, percent} per Goal/Acceptance; percent = Math.floor(done*100/total) with 0 when total===0. Locked tests node --test tests/locked/s2_2.test.mjs pass 3/3. No network, dependencies, env/home rea…
 - commit: `0c4c03e`
 - note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
+
+### 2026-11-25T15:12:44Z · S3.1 · attempt 1 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 26s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 63587/592
+- writer said: ## Result Created `bin/plan-tracker.mjs` CLI tool that prints the next pending step from a plan file. ## Changes - `bin/plan-tracker.mjs` - new file ## Limitations none
+- locked tests: ok
+- scope: ok (bin/plan-tracker.mjs)
+- independent check: 21/21 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 54s · no verdict — Submission recorded (verified): Reviewed step S3.1 (`next` command), HEAD commit 595bb70. Findings: only `bin/plan-tracker.mjs` was added (34 lines); `src/parse.mjs` is pre-existing and untouched, within the allowed files. The CLI implements all four acceptance cases: prints `<id> <title>\n` and exits 0 for the next step; prints `all steps done\n` and exits 3 when all steps are done; writes `canno…
+- commit: `595bb70`
+- note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
