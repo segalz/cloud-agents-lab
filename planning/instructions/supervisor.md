@@ -27,7 +27,8 @@ These rules are what `runner/supervisor.mjs` does today. They are also the draft
    - **Reading the verdict:** the Cline bridge returns Cline's own submission text, so the requested first line is often reworded, for example `Submission recorded (verified): REJECT. ...`. Read `VERDICT: X` if it is there. Otherwise use the first bare `APPROVE` or `REJECT`.
    - **No verdict:** run the review once more. If there is still no verdict, mark the step `needs_review`, keep the candidate commit, and stop the run. Never accept unreviewed work. Run 2 showed why: a real bug was accepted because a `REJECT` was missed.
 9. **Record.** After every attempt, append to `planning/log.md` and `planning/runs.jsonl`, update `planning/progress.md`, then commit and push.
-10. **Stop rule.**
+10. **Escalate.** After a failed attempt, the next attempt uses the next writer model in `WRITER_MODELS`. Order the list from cheap or fast to strong. Run 6 showed why: `laguna-xs` failed the same test twice.
+11. **Stop rule.**
     - After `MAX_ATTEMPTS` (default 2) failed attempts, mark the step `failed` and stop the run. Later steps are never attempted after a failure.
     - Stop when `MAX_STEPS` steps are done.
     - Stop when the time budget is nearly used up.
