@@ -127,3 +127,6 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - locked tests: ok
 - scope: ok (no changes)
 - note: writer changed nothing
+
+### 2026-11-25T15:46:08Z · run 45647298363 ended · step_failed S2.2
+- steps done this run: 1 · elapsed 463s
