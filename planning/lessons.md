@@ -92,6 +92,21 @@ _Filled in after each run, as dated entries. Each entry covers what happened, ev
 **Rules to add**
 - **Read the supervisor's exit code.** Hermes should read the result of the supervisor step itself (`run_end` in `log.md`), not only the colour of the Actions run.
 
+### 2026-11-25: runs 6 and 7 (a new locked test closes the gap)
+
+**What happened**
+- **The new test catches the gap.** Two cases were added to `tests/locked/s2_1.test.mjs`: whitespace or tabs around the id, and a `[ ]` inside a title. The reference implementation passes 27/27, and the agent code failed exactly the new test.
+- **Run 6 ([45652760008](https://github.com/segalz/cloud-agents-lab/actions/runs/45652760008)) failed, as it should.** `laguna-xs` tried twice (410 s with 910k tokens, then 99 s). The bridge's own check failed both times and rolled back the edits. The stop rule then marked S2.1 `failed` and stopped.
+  - **Gap 1:** the supervisor only switched models on a quota error, not on weak results.
+  - **Gap 2:** the feedback said "no changes" without the failing test output.
+  - **Fixed:** escalate to the next writer model after a failed attempt, and put the test output tail in the feedback.
+- **Run 7 ([45654747092](https://github.com/segalz/cloud-agents-lab/actions/runs/45654747092)) succeeded.** S2.1 passed on the first attempt (75 s), with 780 chars of carried feedback: the owner note plus run 6's test output. 27/27 tests passed, also re-checked locally, and the reviewer approved. Escalation was not needed.
+- **GitHub API instability:** 3 more HTTP 500s on `workflow run` and pushes. Retries handled all of them.
+
+**Rules to add**
+- **A failing test beats a note.** A note told the writer what to fix and was only half done. A locked test plus the test output in the feedback got it right.
+- **Retry every GitHub API call** that Hermes makes, with a pause: dispatch, push, and PR.
+
 ## C. Draft rules for the future Hermes / Dots skill
 
 Status: draft until part B confirms them.
