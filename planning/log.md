@@ -103,3 +103,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (4s)
 - setup to first step: 6s inside the supervisor (job setup time is in the Actions log)
+
+### 2026-11-25T15:38:34Z · S2.1 · attempt 3 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 200s · bridge status done · bridge check true · fix runs 1 · restored false · tokens 298083/12043
+- carried feedback into this attempt: 555 chars (owner note, history)
+- writer said: The regex `stepLine = /^[-*] \[([ xX])\] S(\d+)\.(\d+) +/` uses `S(\d+)\.(\d+) +` which captures the two number parts separately and requires at least one space after the id. This should work for testing. Now let me trace through the indented line test case to make sure that works: Test: `" - [ ] S1…
+- locked tests: ok
+- scope: ok (src/parse.mjs, src/update.mjs)
+- independent check: 18/18 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 188s · APPROVE — Submission recorded (verified): Reviewed step S2.1 (HEAD commit 513a84a). Verified: - Tests: s2_1 5/5 pass; earlier steps s1_1/s1_2 9/9 pass (no regression). - Scope: HEAD changes only src/update.mjs and src/parse.mjs (both allowed). - markDone preserves every other byte (CRLF included) via split on (\r?\n) and rejoin; returns original text unchanged when already done; throws Error("unknown step: …
+- commit: `513a84a`
