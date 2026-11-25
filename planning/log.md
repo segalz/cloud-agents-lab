@@ -37,3 +37,13 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - writer models: `nvidia/poolside/laguna-xs-2.1`, `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · ping ok (2s)
 - setup to first step: 4s inside the supervisor (job setup time is in the Actions log)
+
+### 2026-11-25T15:07:32Z · S2.1 · attempt 1 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 217s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 191544/13478
+- writer said: The code looks good. Let me trace through once more for potential edge cases: 1. **Test 2 with CRLF**: `"intro\r\n* [ ] S2.1 Keep spacing \r\n- [ ] S2.2 Other\r\n"` - The `* [ ] S2.1` line matches stepRegex - It doesn't start with " " - It matches idPattern for S2.1 - It includes "[ ]" so we replace…
+- locked tests: ok
+- scope: ok (src/update.mjs)
+- independent check: 14/14 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 69s · no verdict — Submission recorded (verified): REJECT. Reviewed S2.1 `src/update.mjs` against plan.md acceptance. Locked tests pass 5/5, scope is clean (only src/update.mjs added; no network/deps/env/secrets), but a concrete acceptance defect exists: `src/update.mjs:17` uses `line.includes("[ ]")` anywhere in the line to detect a pending step instead of checking the checkbox. An already-done step whose title con…
+- commit: `f5d498e`
+- note: accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look
