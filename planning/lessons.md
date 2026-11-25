@@ -30,6 +30,27 @@ This file turns what the runs show into instructions for Hermes or Dots.
 
 _Filled in after each run, as dated entries. Each entry covers what happened, evidence (a log entry or run link), and the rule to add for Hermes or Dots._
 
+### 2026-11-25: runs 1 and 2 (all 6 steps, every one on the first writer attempt)
+
+**What the runs showed**
+- **It works end to end on GitHub's free runner.**
+  - Run 1 ([45640745890](https://github.com/segalz/cloud-agents-lab/actions/runs/45640745890)) did 2 steps in 3m17s in total, of which about 1 minute was job setup.
+  - Run 2 ([45641457776](https://github.com/segalz/cloud-agents-lab/actions/runs/45641457776)) resumed exactly at S2.1 from `progress.md` and did 4 steps in 8m44s.
+- **The writer** (`nvidia/poolside/laguna-xs-2.1` through `apply_opencode_edits`) passed all 6 steps first time:
+  - 5 to 26 s each for small steps;
+  - 217 s and 191k input tokens for S2.1.
+  - No quota or rate-limit failures at this pace.
+- **The reviewer adds real value.** Cline (`nvidia/nemotron-3.5-super-vl-120b-a12b`) found a real bug in S2.1 that the locked tests did not cover: `src/update.mjs:17` uses `line.includes("[ ]")`, so a done step whose title contains `[ ]` would get its title changed.
+
+**What went wrong**
+- **BUG (supervisor, fixed):** the verdict was missed. The bridge returned `Submission recorded (verified): REJECT. ...` instead of the requested first line `VERDICT: REJECT`. The supervisor read this as "no verdict" and accepted the step without review.
+  - The same rewording happened in 3 of 6 reviews.
+  - Fix: parse the bare word, retry the review once, and never accept unreviewed work (`needs_review`).
+
+**Rules to add for Hermes or Dots**
+- **Verdicts:** never rely on an exact output line from a bridged agent. Parse leniently, and treat "unknown" as "stop", never as "pass".
+- **Tests:** locked tests prove the minimum only. Keep a reviewer from a different model on every step, and add a regression test for every bug the reviewer finds.
+
 ## C. Draft rules for the future Hermes / Dots skill
 
 Status: draft until part B confirms them.

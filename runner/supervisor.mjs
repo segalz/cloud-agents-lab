@@ -203,7 +203,9 @@ function parseWriter(res) {
 function parseReview(res) {
   const j = jsonIn(res.text);
   const body = (j && typeof j.text === "string") ? j.text : res.text;
-  const m = body.match(/VERDICT:\s*(APPROVE|REJECT)/i);
+  // The Cline bridge returns Cline's own submission text, so the requested first line is often
+  // reworded ("Submission recorded (verified): REJECT. ..."). Prefer "VERDICT: X", else the first bare word.
+  const m = body.match(/VERDICT:\s*\**\s*(APPROVE|REJECT)/i) || body.match(/\b(APPROVE|REJECT)\b/);
   return { verdict: m ? m[1].toUpperCase() : null, body: redact(body) };
 }
 
@@ -266,12 +268,25 @@ async function runStep(writer, reviewer, pr, row) {
     e.commit = sha;
 
     const diff = redact(git("show", "--stat", "--patch", "HEAD")).slice(0, 14_000);
-    const rv = await callTool(reviewer, "ask_cline_workspace", {
+    const reviewArgs = {
       cwd: REPO, provider: REVIEWER_PROVIDER, model: REVIEWER_MODEL, thinking: "high", timeoutSeconds: 280,
       prompt: `${reviewerRules}\n\n## Shared format (from planning/plan.md)\n\n${header}\n\n## Step\n\n${spec}\n\n## HEAD commit ${sha}\n\n\`\`\`diff\n${diff}\n\`\`\`\n`,
-    }, 330_000);
-    const review = parseReview(rv);
-    e.review = { model: `${REVIEWER_PROVIDER}/${REVIEWER_MODEL}`, seconds: rv.seconds, verdict: review.verdict || (rv.ok ? "no verdict" : "unavailable"), notes: short(review.body, 400) };
+    };
+    let rv = await callTool(reviewer, "ask_cline_workspace", reviewArgs, 330_000);
+    let review = parseReview(rv);
+    let reviewTries = 1;
+    if (!review.verdict) { // one more try before giving up on the review
+      rv = await callTool(reviewer, "ask_cline_workspace", reviewArgs, 330_000);
+      review = parseReview(rv); reviewTries = 2;
+    }
+    e.review = { model: `${REVIEWER_PROVIDER}/${REVIEWER_MODEL}`, seconds: rv.seconds, tries: reviewTries, verdict: review.verdict || (rv.ok ? "no verdict" : "unavailable"), notes: short(review.body, 400), full: review.body.slice(0, 3000) };
+    if (!review.verdict) {
+      // Never accept unreviewed work: keep the candidate commit and stop for a human.
+      e.result = "needs_review"; e.note = "reviewer gave no verdict twice; candidate kept on the branch, a human must review it";
+      row.status = "needs_review"; row.writer = model; row.commit = sha; row.reviewer = e.review.verdict; row.updated = now();
+      saveProgress(pr); log(e); saveState(`progress: ${row.id} needs human review (run ${RUN_ID})`);
+      return "needs_review";
+    }
     if (review.verdict === "REJECT") {
       git("reset", "-q", "--hard", "HEAD~1");
       e.commit = `${sha} (undone)`;
@@ -279,9 +294,8 @@ async function runStep(writer, reviewer, pr, row) {
       continue;
     }
     e.result = "done";
-    if (!review.verdict) e.note = "accepted WITHOUT review (reviewer unavailable or gave no verdict) — a human should look";
     row.status = "done"; row.writer = model; row.commit = sha; row.updated = now();
-    row.reviewer = review.verdict === "APPROVE" ? "approve" : `n/a (${e.review.verdict})`;
+    row.reviewer = "approve";
     saveProgress(pr); log(e);
     e.push = saveState(`progress: ${row.id} done (run ${RUN_ID})`);
     return "done";
@@ -316,7 +330,7 @@ async function main() {
     const row = pr.rows.find(r => r.status === "pending" || r.status === "in_progress");
     if (!row) { result = "all_steps_done"; break; }
     const out = await runStep(writer, reviewer, pr, row);
-    if (out !== "done") { result = out === "budget" ? "stopped_budget" : `step_failed ${row.id}`; break; }
+    if (out !== "done") { result = out === "budget" ? "stopped_budget" : out === "needs_review" ? `needs_review ${row.id}` : `step_failed ${row.id}`; break; }
     done++;
   }
   const prFinal = readProgress();
@@ -329,7 +343,7 @@ async function main() {
   }
   await writer.close().catch(() => {});
   await reviewer.close().catch(() => {});
-  process.exit(result.startsWith("step_failed") ? 1 : 0);
+  process.exit(result.startsWith("step_failed") || result.startsWith("needs_review") ? 1 : 0);
 }
 
 main().catch(err => {
