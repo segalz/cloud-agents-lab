@@ -273,6 +273,8 @@ async function runStep(writer, reviewer, pr, row) {
     row.attempts++;
     const fail = (result, why, fb) => {
       e.result = result; e.note = why; feedback = fb; e.feedback = fb.slice(0, 3000); failedAttempts++;
+      // Escalate: the next attempt uses the next (stronger / different) writer model, if there is one.
+      if (modelIdx < WRITER_MODELS.length - 1) { modelIdx++; e.note += ` · next attempt escalates to ${WRITER_MODELS[modelIdx]}`; }
       cleanTree(); row.updated = now(); saveProgress(pr); log(e); saveState(`log: ${row.id} attempt ${e.attempt} ${result}`);
     };
     const lock = lockCheck();
@@ -287,7 +289,11 @@ async function runStep(writer, reviewer, pr, row) {
     e.check = { pass: check.pass, fail: check.fail, failing: check.failing, rerun: !!check.rerun };
     // A re-opened step may already hold correct code: "no changes + tests pass" goes to review as-is.
     const unchanged = !changed.length;
-    if (unchanged && !check.ok) { fail("no_changes", "writer changed nothing and the tests fail", `No file was changed, and the tests fail. Implement the step in: ${files.join(", ")}.\nFailing: ${check.failing.join("; ")}`); continue; }
+    if (unchanged && !check.ok) {
+      const why = w.restored ? "the bridge restored the writer's edits because its check failed" : "writer changed nothing and the tests fail";
+      fail("no_changes", why, `Your previous edits did not pass the check${w.restored ? " and were rolled back" : ""}. Implement the step in: ${files.join(", ")}.\nFailing: ${check.failing.join("; ")}\n\nTest output tail:\n${check.tail}`);
+      continue;
+    }
     if (!check.ok) { fail("rejected_tests", "independent check failed", `The tests failed. Failing: ${check.failing.join("; ")}\n\nOutput tail:\n${check.tail}`); continue; }
 
     let sha;
