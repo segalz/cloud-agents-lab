@@ -16,3 +16,8 @@ export function parsePlan(text) {
   }
   return steps;
 }
+
+export function nextStep(steps) {
+  if (!Array.isArray(steps)) throw new TypeError();
+  return steps.find((s) => !s.done) || null;
+}
