@@ -14,7 +14,7 @@ The next run always starts from the first row whose status is `pending` or `in_p
 - `failed`, which means the attempts ran out: a human or the supervisor decides what happens next.
 - `skipped`
 
-Last run: none yet
+Last run: 2026-11-25T15:06:09Z · run [45640745890](https://github.com/segalz/cloud-agents-lab/actions/runs/45640745890) · max_steps_reached · 2/6 steps done
 
 | Step | Title | Status | Attempts | Writer | Reviewer | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|---|
