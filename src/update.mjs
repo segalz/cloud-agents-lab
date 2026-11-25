@@ -1,45 +1,20 @@
 export function markDone(text, id) {
-  const stepRegex = /^[-*] \[([ xX])\] S\d+\.\d+ /;
-  const idPattern = new RegExp(`^[-*] \\[([ xX])\\] ${id.replace(/\./g, "\\.")} `);
-
   const lines = text.split(/(\r?\n)/);
-  const result = [];
-  let foundPendingStep = false;
-  let foundStepId = false;
-
+  let found = false;
   for (let i = 0; i < lines.length; i += 2) {
     const line = lines[i];
-    const newline = lines[i + 1] || "";
-
-    if (line !== undefined && line.match(stepRegex) && !line.startsWith(" ")) {
-      if (line.match(idPattern)) {
-        foundStepId = true;
-        if (line.includes("[ ]")) {
-          result.push(line.replace(/\[ \]/, "[x]"));
-          foundPendingStep = true;
-        } else {
-          result.push(line);
-        }
-      } else {
-        result.push(line);
-      }
-      result.push(newline);
-    } else {
-      if (line !== undefined) {
-        result.push(line);
-        result.push(newline);
-      }
-    }
+    if (!/^[-*] \[([ xX])\] S\d+\.\d+ /.test(line)) continue;
+    const match = line.match(/^([-*]) \[([ xX])\] (S\d+\.\d+) (.*)$/);
+    if (!match) continue;
+    const [, prefix, checkbox, stepId, title] = match;
+    if (stepId !== id) continue;
+    if (checkbox !== " ") return text;
+    found = true;
+    lines[i] = `${prefix} [x] ${id} ${title}`;
+    break;
   }
-
-  const output = result.join("");
-  if (!foundStepId) {
+  if (!found) {
     throw new Error(`unknown step: ${id}`);
   }
-
-  if (!foundPendingStep) {
-    return text;
-  }
-
-  return output;
+  return lines.join("");
 }
