@@ -19,7 +19,7 @@ Last run: none yet
 | Step | Title | Status | Attempts | Writer | Reviewer | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|---|
 | S1.1 | Parse checklist steps | done | 1 | nvidia/poolside/laguna-xs-2.1 | approve | da1ef7e | 2026-11-25T15:05:32Z |
-| S1.2 | Find the next step | in_progress | 0 | - | - | - | 2026-11-25T15:05:33Z |
+| S1.2 | Find the next step | done | 1 | nvidia/poolside/laguna-xs-2.1 | approve | 9cf7614 | 2026-11-25T15:06:08Z |
 | S2.1 | Mark a step done | pending | 0 | - | - | - | - |
 | S2.2 | Summary numbers | pending | 0 | - | - | - | - |
 | S3.1 | `next` command | pending | 0 | - | - | - | - |

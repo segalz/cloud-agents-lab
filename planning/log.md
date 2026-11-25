@@ -19,3 +19,12 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - independent check: 5/5 passed
 - reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 74s · APPROVE — Submission recorded (verified): Reviewed HEAD commit da1ef7e (S1.1: add parsePlan to src/parse.mjs). Verified all 5 locked tests pass via `node --test tests/locked/s1_1.test.mjs`. Probed edge cases the tests don't cover: indented lines, checkbox-without-id, bad id `SX.1`, inline checkbox (all ignored per shared format), CRLF, `[X]` done=true, empty title with trailing whitespace, duplicate-id erro…
 - commit: `da1ef7e`
+
+### 2026-11-25T15:05:35Z · S1.2 · attempt 1 · **done**
+- writer: `nvidia/poolside/laguna-xs-2.1` · 7s · bridge status done · bridge check true · fix runs 0 · restored false · tokens 23179/234
+- writer said: ## Result Added `nextStep(steps)` function to `src/parse.mjs` that returns the first pending step or `null`. ## Changes `src/parse.mjs` ## Limitations none
+- locked tests: ok
+- scope: ok (src/parse.mjs)
+- independent check: 9/9 passed
+- reviewer: `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` · 26s · APPROVE — Submission recorded (verified): Reviewed step S1.2 (HEAD commit 9cf7614). Confirmed only src/parse.mjs changed, nextStep added per spec with TypeError for non-array input, parsePlan unchanged, locked tests pass 4/4, and no network/dependency/env/secret issues. Noted minor edge case: src/parse.mjs:22 uses !s.done rather than done === false (not reachable via parsePlan booleans). Verdict: APPROVE.
+- commit: `9cf7614`
