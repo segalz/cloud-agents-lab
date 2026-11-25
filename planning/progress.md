@@ -22,5 +22,5 @@ Last run: 2026-11-25T15:46:08Z · run [45647298363](https://github.com/segalz/cl
 | S1.2 | Find the next step | done | 1 | nvidia/poolside/laguna-xs-2.1 | approve | 9cf7614 | 2026-11-25T15:06:08Z |
 | S2.1 | Mark a step done | done | 3 | nvidia/poolside/laguna-xs-2.1 | approve | 513a84a | 2026-11-25T15:45:01Z |
 | S2.2 | Summary numbers | done | 4 | nvidia/poolside/laguna-xs-2.1 | approve | d571598 | 2026-11-25T15:50:12Z |
-| S3.1 | `next` command | pending | 1 | - | - | - | - |
+| S3.1 | `next` command | in_progress | 1 | - | - | - | 2026-11-25T15:50:17Z |
 | S3.2 | `status` and `done` commands | done | 1 | nvidia/poolside/laguna-xs-2.1 | approve | 54895c6 | 2026-11-25T15:15:21Z |
