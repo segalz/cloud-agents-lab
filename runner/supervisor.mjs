@@ -139,6 +139,7 @@ function mdEntry(e) {
   const w = e.writer || {};
   const lines = [`\n### ${e.time} · ${e.step} · attempt ${e.attempt} · **${e.result}**`];
   if (w.model) lines.push(`- writer: \`${w.model}\` · ${w.seconds}s · bridge status ${w.status} · bridge check ${w.passed} · fix runs ${w.fixRuns} · restored ${w.restored}${w.limitKind ? ` · limit ${w.limitKind}` : ""}${w.tokens ? ` · tokens ${w.tokens}` : ""}`);
+  if (e.carried) lines.push(`- carried feedback into this attempt: ${e.carried}`);
   if (w.summary) lines.push(`- writer said: ${w.summary}`);
   if (e.lock) lines.push(`- locked tests: ${e.lock}`);
   if (e.scope) lines.push(`- scope: ${e.scope}`);
@@ -209,6 +210,29 @@ function parseReview(res) {
   return { verdict: m ? m[1].toUpperCase() : null, body: redact(body) };
 }
 
+// Feedback that survives between runs: an owner note (planning/notes/<id>.md) plus the last
+// attempt's feedback or reviewer REJECT for this step from planning/runs.jsonl.
+function carriedFeedback(id) {
+  const parts = [];
+  const note = P(`planning/notes/${id}.md`);
+  if (existsSync(note)) parts.push(`Note from the owner:\n${readFileSync(note, "utf8").trim()}`);
+  let last = null;
+  try {
+    for (const l of readFileSync(P("planning/runs.jsonl"), "utf8").split("\n")) {
+      if (!l.trim()) continue;
+      const j = JSON.parse(l);
+      if (j.type === "attempt" && j.step === id && j.writer) last = j;
+    }
+  } catch { /* no history */ }
+  if (last) {
+    const body = last.review?.full || last.review?.notes || "";
+    if (last.feedback) parts.push(`From the previous attempt (run ${last.run}, ${last.result}):\n${last.feedback}`);
+    else if (/\bREJECT\b/.test(body) && !/VERDICT:\s*\**\s*APPROVE/i.test(body)) parts.push(`The reviewer of the previous attempt (run ${last.run}) reported:\n${body}`);
+  }
+  if (!parts.length) return "";
+  return `${parts.join("\n\n")}\n\nCode from a previous attempt may already exist in the allowed files: fix it rather than assuming it is correct.`.slice(0, 5000);
+}
+
 // ---------- one step ----------
 async function runStep(writer, reviewer, pr, row) {
   const { spec, verify, files, header } = stepSpec(row.id);
@@ -218,7 +242,8 @@ async function runStep(writer, reviewer, pr, row) {
   row.status = "in_progress"; row.updated = now();
   saveProgress(pr); saveState(`progress: ${row.id} started (run ${RUN_ID})`);
 
-  let feedback = "";
+  let feedback = carriedFeedback(row.id);
+  let carried = feedback ? `${feedback.length} chars (owner note${existsSync(P(`planning/notes/${row.id}.md`)) ? "" : " none"}, history)` : null;
   let modelIdx = 0;
   let failedAttempts = 0;
   while (failedAttempts < MAX_ATTEMPTS) {
@@ -229,6 +254,7 @@ async function runStep(writer, reviewer, pr, row) {
     }
     const model = WRITER_MODELS[modelIdx];
     const e = { type: "attempt", time: now(), run: RUN_ID, step: row.id, attempt: row.attempts + 1 };
+    if (carried) { e.carried = carried; carried = null; }
     if (!model) {
       e.result = "no_model_left"; e.note = "every writer model hit a quota or rate limit";
       log(e); break;
@@ -246,7 +272,7 @@ async function runStep(writer, reviewer, pr, row) {
     }
     row.attempts++;
     const fail = (result, why, fb) => {
-      e.result = result; e.note = why; feedback = fb; failedAttempts++;
+      e.result = result; e.note = why; feedback = fb; e.feedback = fb.slice(0, 3000); failedAttempts++;
       cleanTree(); row.updated = now(); saveProgress(pr); log(e); saveState(`log: ${row.id} attempt ${e.attempt} ${result}`);
     };
     const lock = lockCheck();
