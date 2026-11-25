@@ -1,0 +1,16 @@
+{
+  "name": "cloud-agents-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Experiment: free coding agents (OpenCode writes, Cline reviews) building plan-tracker on GitHub Actions",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "plan-tracker": "bin/plan-tracker.mjs" },
+  "scripts": {
+    "test": "node --test tests/locked/*.test.mjs",
+    "supervise": "node runner/supervisor.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  }
+}

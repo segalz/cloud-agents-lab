@@ -1,0 +1,115 @@
+name: agent-run
+# One supervised run: OpenCode writes, Cline reviews, state is committed to agent/work.
+# Trigger: gh workflow run agent-run -R segalz/cloud-agents-lab -f max_steps=2
+on:
+  workflow_dispatch:
+    inputs:
+      max_steps:
+        description: Steps to finish in this run
+        default: "2"
+      max_attempts:
+        description: Failed attempts allowed per step before it is marked failed
+        default: "2"
+      writer_models:
+        description: OpenCode writer models in order (comma-separated)
+        default: "nvidia/poolside/laguna-xs-2.1,nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b"
+      reviewer_model:
+        description: Cline reviewer model (provider nvidia)
+        default: "nvidia/nemotron-3.5-super-vl-120b-a12b"
+      time_budget_min:
+        description: Minutes the supervisor may use
+        default: "60"
+
+concurrency:
+  group: agent-run
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      BRIDGES_DIR: ${{ github.workspace }}/../bridges
+      WORK_BRANCH: agent/work
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare the work branch (resume from agent/work if it exists)
+        run: |
+          git config --global user.name "cloud-agents-bot"
+          git config --global user.email "cloud-agents-bot@users.noreply.github.com"
+          git config --global core.autocrlf false
+          cp tests/LOCKED.sha256 "$RUNNER_TEMP/LOCKED.sha256"
+          if git ls-remote --exit-code --heads origin "$WORK_BRANCH" >/dev/null; then
+            git fetch -q origin "$WORK_BRANCH"
+            git checkout -q -B "$WORK_BRANCH" FETCH_HEAD
+            git merge -q --no-edit origin/main
+          else
+            git checkout -q -b "$WORK_BRANCH"
+          fi
+          git log --oneline -3
+
+      - name: Install agent CLIs
+        run: npm install -g --no-audit --no-fund cline@3.0.75 opencode-ai@1.19.5
+
+      - name: Install the bridges (linux-support branch)
+        run: |
+          mkdir -p "$BRIDGES_DIR"
+          git clone -q --depth 1 -b linux-support https://github.com/segalz/openCodeHelperMcp.git "$BRIDGES_DIR/openCodeHelperMcp"
+          git clone -q --depth 1 -b linux-support https://github.com/segalz/ClineMcp.git "$BRIDGES_DIR/ClineMcp"
+          (cd "$BRIDGES_DIR/openCodeHelperMcp" && npm ci --no-audit --no-fund && git log --oneline -1)
+          (cd "$BRIDGES_DIR/ClineMcp" && npm ci --no-audit --no-fund && npm run build && git log --oneline -1)
+
+      - name: Write model auth files (secret never enters the agents' environment)
+        env:
+          K: ${{ secrets.NVIDIA_API_KEY }}
+        run: |
+          umask 077
+          mkdir -p ~/.local/share/opencode ~/.cline/data/settings
+          node -e '
+            const fs = require("fs"), h = process.env.HOME, k = process.env.K;
+            if (!k) { console.error("NVIDIA_API_KEY secret is missing"); process.exit(1); }
+            fs.writeFileSync(h + "/.local/share/opencode/auth.json", JSON.stringify({ nvidia: { type: "api", key: k } }));
+            fs.writeFileSync(h + "/.cline/data/settings/providers.json", JSON.stringify({ version: 1, lastUsedProvider: "nvidia",
+              providers: { nvidia: { settings: { provider: "nvidia", apiKey: k }, updatedAt: new Date().toISOString(), tokenSource: "manual" } } }));
+            console.log("auth files written");'
+
+      - name: Install supervisor dependencies
+        run: npm install --no-audit --no-fund --no-save
+
+      - name: Run the supervisor
+        env:
+          PUSH_TOKEN: ${{ github.token }}
+          LOCK_FILE: ${{ runner.temp }}/LOCKED.sha256
+          MAX_STEPS: ${{ inputs.max_steps }}
+          MAX_ATTEMPTS: ${{ inputs.max_attempts }}
+          WRITER_MODELS: ${{ inputs.writer_models }}
+          REVIEWER_PROVIDER: nvidia
+          REVIEWER_MODEL: ${{ inputs.reviewer_model }}
+          TIME_BUDGET_MIN: ${{ inputs.time_budget_min }}
+        run: node runner/supervisor.mjs
+
+      - name: Open or update the pull request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "$WORK_BRANCH" >/dev/null; then echo "no work branch yet"; exit 0; fi
+          url=$(gh pr list -R "$GITHUB_REPOSITORY" --head "$WORK_BRANCH" --state open --json url -q '.[0].url')
+          if [ -z "$url" ]; then
+            gh pr create -R "$GITHUB_REPOSITORY" --base main --head "$WORK_BRANCH" --title "Agent work: plan-tracker" --body-file planning/PR_BODY.md
+          else
+            gh pr comment "$url" -R "$GITHUB_REPOSITORY" --body "Run ${GITHUB_RUN_ID} finished: $(grep '^Last run:' planning/progress.md | sed 's/^Last run: //')"
+          fi
