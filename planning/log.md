@@ -182,3 +182,6 @@ Secrets are never written here. The supervisor redacts known key values and bloc
 - scope: ok (no changes)
 - independent check: 26/27 passed · failing: same step-line rule as parsePlan: any whitespace around the id
 - note: writer changed nothing and the tests fail
+
+### 2026-11-25T16:30:08Z · run 45652760008 ended · step_failed S2.1
+- steps done this run: 0 · elapsed 527s
