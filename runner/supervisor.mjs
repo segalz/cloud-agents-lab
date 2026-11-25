@@ -282,18 +282,27 @@ async function runStep(writer, reviewer, pr, row) {
     const outside = changed.filter(f => !files.includes(f));
     e.scope = outside.length ? `out of scope: ${outside.join(", ")}` : `ok (${changed.join(", ") || "no changes"})`;
     if (outside.length) { fail("rejected_scope", e.scope, `You changed files outside "Files allowed": ${outside.join(", ")}. Change only: ${files.join(", ")}.`); continue; }
-    if (!changed.length) { fail("no_changes", "writer changed nothing", `No file was changed. Implement the step in: ${files.join(", ")}.`); continue; }
     let check = runTests([...earlierTests, verify]);
     if (!check.ok) { const again = runTests([...earlierTests, verify]); if (again.ok) check = { ...again, rerun: true }; }
     e.check = { pass: check.pass, fail: check.fail, failing: check.failing, rerun: !!check.rerun };
+    // A re-opened step may already hold correct code: "no changes + tests pass" goes to review as-is.
+    const unchanged = !changed.length;
+    if (unchanged && !check.ok) { fail("no_changes", "writer changed nothing and the tests fail", `No file was changed, and the tests fail. Implement the step in: ${files.join(", ")}.\nFailing: ${check.failing.join("; ")}`); continue; }
     if (!check.ok) { fail("rejected_tests", "independent check failed", `The tests failed. Failing: ${check.failing.join("; ")}\n\nOutput tail:\n${check.tail}`); continue; }
 
     let sha;
-    try { sha = commit(`${row.id}: ${row.title} (writer ${model}, run ${RUN_ID})`, files); }
-    catch (err) { fail("blocked_secret", String(err.message), "Your change contained a secret-like value. Never write keys or tokens."); continue; }
+    if (unchanged) {
+      sha = git("rev-parse", "--short", "HEAD").trim();
+      e.note = "writer kept the existing code (no changes); reviewing the files as they are";
+    } else {
+      try { sha = commit(`${row.id}: ${row.title} (writer ${model}, run ${RUN_ID})`, files); }
+      catch (err) { fail("blocked_secret", String(err.message), "Your change contained a secret-like value. Never write keys or tokens."); continue; }
+    }
     e.commit = sha;
 
-    const diff = redact(git("show", "--stat", "--patch", "HEAD")).slice(0, 14_000);
+    const diff = unchanged
+      ? redact(files.filter(f => existsSync(P(f))).map(f => `--- ${f} (current content, unchanged by this attempt)\n${readFileSync(P(f), "utf8")}`).join("\n\n")).slice(0, 14_000)
+      : redact(git("show", "--stat", "--patch", "HEAD")).slice(0, 14_000);
     const reviewArgs = {
       cwd: REPO, provider: REVIEWER_PROVIDER, model: REVIEWER_MODEL, thinking: "high", timeoutSeconds: 280,
       prompt: `${reviewerRules}\n\n## Shared format (from planning/plan.md)\n\n${header}\n\n## Step\n\n${spec}\n\n## HEAD commit ${sha}\n\n\`\`\`diff\n${diff}\n\`\`\`\n`,
@@ -314,8 +323,7 @@ async function runStep(writer, reviewer, pr, row) {
       return "needs_review";
     }
     if (review.verdict === "REJECT") {
-      git("reset", "-q", "--hard", "HEAD~1");
-      e.commit = `${sha} (undone)`;
+      if (!unchanged) { git("reset", "-q", "--hard", "HEAD~1"); e.commit = `${sha} (undone)`; }
       fail("rejected_review", "reviewer rejected", `The reviewer rejected the change:\n${review.body.slice(0, 3000)}`);
       continue;
     }
